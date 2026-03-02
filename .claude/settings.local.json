@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build:*)",
+      "Bash(venv/Scripts/python manage.py migrate:*)",
+      "Bash(venv/Scripts/python manage.py makemigrations:*)",
+      "Bash(venv/Scripts/python:*)"
+    ]
+  }
+}
