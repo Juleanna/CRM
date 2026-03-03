@@ -6,7 +6,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   BankOutlined,
-  ShopOutlined,
   DatabaseOutlined,
   ToolOutlined,
   ColumnHeightOutlined,
@@ -16,7 +15,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getCustomers, createCustomer, updateCustomer, deleteCustomer,
-  getSuppliers, createSupplier, updateSupplier, deleteSupplier,
   getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse,
   getDepartments, createDepartment, updateDepartment, deleteDepartment,
   getSizes, createSize, updateSize, deleteSize,
@@ -44,12 +42,6 @@ const customerTypeMap: Record<string, { label: string; color: string }> = {
   recipient: { label: 'Одержувач', color: 'purple' },
 }
 
-const supplierCategoryMap: Record<string, { label: string; color: string }> = {
-  manufacturer: { label: 'Виробник', color: 'blue' },
-  retailer: { label: 'Рітейлер', color: 'orange' },
-  both: { label: 'Виробник і рітейлер', color: 'green' },
-}
-
 const warehouseTypeMap: Record<string, { label: string; color: string }> = {
   main: { label: 'Головний склад', color: 'blue' },
   production_unit: { label: 'Склад цеху', color: 'orange' },
@@ -63,7 +55,7 @@ const departmentTypeMap: Record<string, { label: string; color: string }> = {
 
 // --- API config per tab ---
 
-type TabKey = 'customer' | 'supplier' | 'warehouse' | 'department' | 'size' | 'fabricType' | 'fabricClass'
+type TabKey = 'customer' | 'warehouse' | 'department' | 'size' | 'fabricType' | 'fabricClass'
 
 const apiConfig: Record<TabKey, {
   queryKey: string
@@ -73,7 +65,6 @@ const apiConfig: Record<TabKey, {
   deleteFn: (id: number) => Promise<unknown>
 }> = {
   customer: { queryKey: 'customers', getFn: getCustomers as never, createFn: createCustomer, updateFn: updateCustomer, deleteFn: deleteCustomer },
-  supplier: { queryKey: 'suppliers', getFn: getSuppliers as never, createFn: createSupplier, updateFn: updateSupplier, deleteFn: deleteSupplier },
   warehouse: { queryKey: 'warehouses', getFn: getWarehouses as never, createFn: createWarehouse, updateFn: updateWarehouse, deleteFn: deleteWarehouse },
   department: { queryKey: 'departments', getFn: getDepartments as never, createFn: createDepartment, updateFn: updateDepartment, deleteFn: deleteDepartment },
   size: { queryKey: 'sizes', getFn: getSizes as never, createFn: createSize, updateFn: updateSize, deleteFn: deleteSize },
@@ -97,15 +88,10 @@ function DirectoriesPage() {
   const [editingRecord, setEditingRecord] = useState<Record<string, unknown> | null>(null)
   const [form] = Form.useForm()
 
-  /* ── Queries for all 7 tabs ─────────────────────────────── */
+  /* ── Queries for all 6 tabs ─────────────────────────────── */
   const { data: customersData, isLoading: customersLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: () => getCustomers({ page_size: 1000 }).then(r => r.data),
-  })
-
-  const { data: suppliersData, isLoading: suppliersLoading } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: () => getSuppliers({ page_size: 1000 }).then(r => r.data),
   })
 
   const { data: warehousesData, isLoading: warehousesLoading } = useQuery({
@@ -134,7 +120,6 @@ function DirectoriesPage() {
   })
 
   const customers = customersData?.results ?? []
-  const suppliers = suppliersData?.results ?? []
   const warehouses = warehousesData?.results ?? []
   const departments = departmentsData?.results ?? []
   const sizes = sizesData?.results ?? []
@@ -260,16 +245,6 @@ function DirectoriesPage() {
     ...actionColumn('customer'),
   ]
 
-  const supplierColumns = [
-    { title: 'Назва', dataIndex: 'company_name', key: 'company_name', sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => String(a.company_name).localeCompare(String(b.company_name)) },
-    { title: 'Категорія', dataIndex: 'category', key: 'category', render: (v: string) => <Tag color={supplierCategoryMap[v]?.color}>{supplierCategoryMap[v]?.label}</Tag> },
-    { title: 'Локація', dataIndex: 'location', key: 'location' },
-    { title: 'Телефон', dataIndex: 'phone', key: 'phone' },
-    { title: 'Контактна особа', dataIndex: 'contact_person', key: 'contact_person' },
-    { title: 'Графік', dataIndex: 'work_schedule', key: 'work_schedule' },
-    ...actionColumn('supplier'),
-  ]
-
   const warehouseColumns = [
     { title: 'Назва', dataIndex: 'name', key: 'name' },
     { title: 'Тип', dataIndex: 'warehouse_type', key: 'warehouse_type', render: (v: string) => <Tag color={warehouseTypeMap[v]?.color}>{warehouseTypeMap[v]?.label}</Tag> },
@@ -334,32 +309,6 @@ function DirectoriesPage() {
             </Row>
           </>
         )
-      case 'supplier':
-        return (
-          <>
-            <Row gutter={16}>
-              <Col span={14}>
-                <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={10}>
-                <Form.Item name="category" label="Категорія" rules={[{ required: true }]}>
-                  <Select options={[{ value: 'manufacturer', label: 'Виробник' }, { value: 'retailer', label: 'Рітейлер' }, { value: 'both', label: 'Виробник і рітейлер' }]} />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}><Form.Item name="phone" label="Телефон"><Input /></Form.Item></Col>
-              <Col span={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}><Form.Item name="contact_person" label="Контактна особа"><Input /></Form.Item></Col>
-              <Col span={12}><Form.Item name="location" label="Локація"><Input /></Form.Item></Col>
-            </Row>
-            <Form.Item name="work_schedule" label="Графік роботи"><Input /></Form.Item>
-          </>
-        )
       case 'warehouse':
         return (
           <>
@@ -422,7 +371,6 @@ function DirectoriesPage() {
 
   const modalTitles: Record<string, string> = {
     customer: 'Контрагент',
-    supplier: 'Постачальник',
     warehouse: 'Склад',
     department: 'Цех / Підрозділ',
     size: 'Розмір',
@@ -455,26 +403,11 @@ function DirectoriesPage() {
               children: (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <span style={{ color: '#888' }}>Замовники та клієнти підприємства</span>
+                    <span style={{ color: '#888' }}>Замовники, постачальники та клієнти підприємства</span>
                     {canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreateModal('customer')}>Додати</Button>}
                   </div>
                   <Spin spinning={customersLoading}>
                     <Table columns={customerColumns} dataSource={filterData(customers, ['company_name', 'address', 'email'])} rowKey="id" size="middle" pagination={{ pageSize: 10 }} />
-                  </Spin>
-                </>
-              ),
-            },
-            {
-              key: 'suppliers',
-              label: <span><ShopOutlined /> Постачальники</span>,
-              children: (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <span style={{ color: '#888' }}>Постачальники матеріалів та фурнітури</span>
-                    {canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreateModal('supplier')}>Додати</Button>}
-                  </div>
-                  <Spin spinning={suppliersLoading}>
-                    <Table columns={supplierColumns} dataSource={filterData(suppliers, ['company_name', 'location', 'contact_person'])} rowKey="id" size="middle" pagination={{ pageSize: 10 }} />
                   </Spin>
                 </>
               ),

@@ -1,10 +1,5 @@
 from django.contrib import admin
-from .models import Supplier, Purchase, PurchaseItem, DeliverySchedule
-
-
-@admin.register(Supplier)
-class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'category', 'location', 'phone', 'email', 'contact_person')
+from .models import Purchase, PurchaseItem, DeliverySchedule
 
 
 @admin.register(Purchase)

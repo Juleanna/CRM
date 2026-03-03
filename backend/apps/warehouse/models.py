@@ -87,7 +87,7 @@ class Material(models.Model):
     currency = models.CharField('Валюта', max_length=10, default='UAH')
     total_price = models.DecimalField('Загальна ціна', max_digits=12, decimal_places=2, default=0)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, verbose_name='Склад', related_name='materials')
-    supplier = models.ForeignKey('procurement.Supplier', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Постачальник', related_name='materials')
+    supplier = models.ForeignKey('orders.Customer', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Постачальник', related_name='materials')
     ttn = models.CharField('ТТН', max_length=255, blank=True)
     order_date = models.DateField('Дата замовлення', null=True, blank=True)
     delivery_date = models.DateField('Дата поставки', null=True, blank=True)

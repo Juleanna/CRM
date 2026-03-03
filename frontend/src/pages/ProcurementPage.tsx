@@ -11,9 +11,10 @@ import {
 } from '@ant-design/icons'
 import {
   getPurchases, createPurchase, updatePurchase, deletePurchase,
-  getSuppliers, createSupplier, updateSupplier, deleteSupplier,
   getDeliverySchedules,
 } from '../api/procurement'
+import { getCustomers } from '../api/orders'
+import type { Customer, PaginatedResponse } from '../types'
 import dayjs from 'dayjs'
 
 const { Title } = Typography
@@ -32,10 +33,10 @@ const paymentStatusMap: Record<string, { color: string; label: string }> = {
   not_paid: { color: 'red', label: 'Не оплачено' },
 }
 
-const supplierCategoryMap: Record<string, { label: string; color: string }> = {
-  manufacturer: { label: 'Виробник', color: 'blue' },
-  retailer: { label: 'Рітейлер', color: 'orange' },
-  both: { label: 'Виробник і рітейлер', color: 'green' },
+const cooperationFormMap: Record<string, { label: string; color: string }> = {
+  tender: { label: 'Тендер', color: 'blue' },
+  direct_order: { label: 'Пряме замовлення', color: 'green' },
+  agreement: { label: 'Угода', color: 'purple' },
 }
 
 const deliveryStatusMap: Record<string, { color: string; label: string }> = {
@@ -61,17 +62,6 @@ interface Purchase {
   created_by_name: string
 }
 
-interface Supplier {
-  id: number
-  company_name: string
-  category: string
-  location: string
-  phone: string
-  email: string
-  contact_person: string
-  work_schedule?: string
-}
-
 interface DeliverySchedule {
   id: number
   contract_number: string
@@ -80,13 +70,6 @@ interface DeliverySchedule {
   expected_date: string
   actual_date: string | null
   status: string
-}
-
-interface PaginatedResponse<T> {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
 }
 
 // ---- Component ----
@@ -106,16 +89,12 @@ function ProcurementPage() {
 
   // Pagination
   const [purchasePage, setPurchasePage] = useState(1)
-  const [supplierPage, setSupplierPage] = useState(1)
 
   // Modals
   const [purchaseModalOpen, setPurchaseModalOpen] = useState(false)
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null)
-  const [supplierModalOpen, setSupplierModalOpen] = useState(false)
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
 
   const [purchaseForm] = Form.useForm()
-  const [supplierForm] = Form.useForm()
 
   // ---- Queries ----
 
@@ -130,11 +109,13 @@ function ProcurementPage() {
       }).then(res => res.data),
   })
 
-  const { data: suppliersData, isLoading: suppliersLoading } = useQuery<PaginatedResponse<Supplier>>({
-    queryKey: ['suppliers', supplierPage, supplierSearch],
+  // Fetch customers with type 'supplier' for the suppliers tab
+  const { data: supplierCustomersData, isLoading: supplierCustomersLoading } = useQuery<PaginatedResponse<Customer>>({
+    queryKey: ['customers', 'suppliers', supplierSearch],
     queryFn: () =>
-      getSuppliers({
-        page: supplierPage,
+      getCustomers({
+        page_size: 1000,
+        customer_types: 'supplier',
         search: supplierSearch || undefined,
       }).then(res => res.data),
   })
@@ -144,16 +125,16 @@ function ProcurementPage() {
     queryFn: () => getDeliverySchedules().then(res => res.data),
   })
 
-  // Also fetch all suppliers for the purchase form dropdown
-  const { data: allSuppliersData } = useQuery<PaginatedResponse<Supplier>>({
-    queryKey: ['suppliers', 'all'],
-    queryFn: () => getSuppliers({ page_size: 1000 }).then(res => res.data),
+  // Fetch all customers for the purchase form dropdown
+  const { data: allCustomersData } = useQuery<PaginatedResponse<Customer>>({
+    queryKey: ['customers', 'all'],
+    queryFn: () => getCustomers({ page_size: 1000 }).then(res => res.data),
   })
 
   const purchases = purchasesData?.results ?? []
-  const suppliers = suppliersData?.results ?? []
+  const supplierCustomers = supplierCustomersData?.results ?? []
   const deliveries = deliveriesData?.results ?? []
-  const allSuppliers = allSuppliersData?.results ?? []
+  const allCustomers = allCustomersData?.results ?? []
 
   // ---- Mutations ----
 
@@ -187,38 +168,6 @@ function ProcurementPage() {
       queryClient.invalidateQueries({ queryKey: ['purchases'] })
     },
     onError: () => message.error('Помилка видалення закупівлі'),
-  })
-
-  const createSupplierMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => createSupplier(data),
-    onSuccess: () => {
-      message.success('Постачальника створено')
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] })
-      setSupplierModalOpen(false)
-      supplierForm.resetFields()
-    },
-    onError: () => message.error('Помилка створення постачальника'),
-  })
-
-  const updateSupplierMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => updateSupplier(id, data),
-    onSuccess: () => {
-      message.success('Постачальника оновлено')
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] })
-      setSupplierModalOpen(false)
-      setEditingSupplier(null)
-      supplierForm.resetFields()
-    },
-    onError: () => message.error('Помилка оновлення постачальника'),
-  })
-
-  const deleteSupplierMutation = useMutation({
-    mutationFn: (id: number) => deleteSupplier(id),
-    onSuccess: () => {
-      message.success('Постачальника видалено')
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] })
-    },
-    onError: () => message.error('Помилка видалення постачальника'),
   })
 
   // ---- Stats ----
@@ -258,33 +207,6 @@ function ProcurementPage() {
         updatePurchaseMutation.mutate({ id: editingPurchase.id, data })
       } else {
         createPurchaseMutation.mutate(data)
-      }
-    } catch {
-      // validation errors
-    }
-  }
-
-  // ---- Supplier Modal Handlers ----
-
-  const openCreateSupplier = () => {
-    setEditingSupplier(null)
-    supplierForm.resetFields()
-    setSupplierModalOpen(true)
-  }
-
-  const openEditSupplier = (record: Supplier) => {
-    setEditingSupplier(record)
-    supplierForm.setFieldsValue(record)
-    setSupplierModalOpen(true)
-  }
-
-  const handleSaveSupplier = async () => {
-    try {
-      const values = await supplierForm.validateFields()
-      if (editingSupplier) {
-        updateSupplierMutation.mutate({ id: editingSupplier.id, data: values })
-      } else {
-        createSupplierMutation.mutate(values)
       }
     } catch {
       // validation errors
@@ -332,30 +254,15 @@ function ProcurementPage() {
   const supplierColumns = [
     {
       title: 'Назва', dataIndex: 'company_name', key: 'company_name',
-      sorter: (a: Supplier, b: Supplier) => a.company_name.localeCompare(b.company_name),
+      sorter: (a: Customer, b: Customer) => a.company_name.localeCompare(b.company_name),
     },
     {
-      title: 'Категорія', dataIndex: 'category', key: 'category', width: 160,
-      render: (c: string) => {
-        const cat = supplierCategoryMap[c]
-        return cat ? <Tag color={cat.color}>{cat.label}</Tag> : <Tag>{c}</Tag>
-      },
+      title: 'Форми співпраці', dataIndex: 'cooperation_forms', key: 'cooperation_forms',
+      render: (v: string[]) => (v || []).map(f => <Tag key={f} color={cooperationFormMap[f]?.color}>{cooperationFormMap[f]?.label || f}</Tag>),
     },
-    { title: 'Локація', dataIndex: 'location', key: 'location', width: 130 },
+    { title: 'Адреса', dataIndex: 'address', key: 'address', ellipsis: true },
     { title: 'Телефон', dataIndex: 'phone', key: 'phone', width: 160 },
     { title: 'Email', dataIndex: 'email', key: 'email', width: 180 },
-    { title: 'Контактна особа', dataIndex: 'contact_person', key: 'contact_person', width: 160 },
-    {
-      title: 'Дії', key: 'actions', width: 100,
-      render: (_: unknown, record: Supplier) => (
-        <Space>
-          {canEdit && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditSupplier(record)} />}
-          {canDelete && <Popconfirm title="Видалити постачальника?" onConfirm={() => deleteSupplierMutation.mutate(record.id)} okText="Так" cancelText="Ні">
-            <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>}
-        </Space>
-      ),
-    },
   ]
 
   const deliveryColumns = [
@@ -461,27 +368,17 @@ function ProcurementPage() {
                       prefix={<SearchOutlined />}
                       allowClear
                       value={supplierSearch}
-                      onChange={e => { setSupplierSearch(e.target.value); setSupplierPage(1) }}
+                      onChange={e => setSupplierSearch(e.target.value)}
                     />
-                  </Col>
-                  <Col flex="auto" style={{ textAlign: 'right' }}>
-                    {canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={openCreateSupplier}>
-                      Додати постачальника
-                    </Button>}
                   </Col>
                 </Row>
                 <Table
                   columns={supplierColumns}
-                  dataSource={suppliers}
+                  dataSource={supplierCustomers}
                   rowKey="id"
                   size="middle"
-                  loading={suppliersLoading}
-                  pagination={{
-                    current: supplierPage,
-                    total: suppliersData?.count ?? 0,
-                    onChange: (page) => setSupplierPage(page),
-                    showTotal: (t) => `Всього: ${t}`,
-                  }}
+                  loading={supplierCustomersLoading}
+                  pagination={{ pageSize: 10, showTotal: (t) => `Всього: ${t}` }}
                 />
               </>
             ),
@@ -520,7 +417,7 @@ function ProcurementPage() {
             <Col span={14}>
               <Form.Item name="supplier" label="Постачальник" rules={[{ required: true, message: 'Оберіть постачальника' }]}>
                 <Select placeholder="Постачальник" showSearch optionFilterProp="label"
-                  options={allSuppliers.map(s => ({ value: s.id, label: s.company_name }))} />
+                  options={allCustomers.map(c => ({ value: c.id, label: c.company_name }))} />
               </Form.Item>
             </Col>
             <Col span={10}>
@@ -548,62 +445,6 @@ function ProcurementPage() {
           </Row>
           <Form.Item name="expected_delivery_date" label="Очікувана дата доставки" style={{ marginBottom: 0 }}>
             <DatePicker style={{ width: '100%' }} placeholder="Оберіть дату" />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Supplier Modal */}
-      <Modal
-        title={editingSupplier ? 'Редагувати постачальника' : 'Новий постачальник'}
-        open={supplierModalOpen}
-        onCancel={() => { setSupplierModalOpen(false); setEditingSupplier(null); supplierForm.resetFields() }}
-        onOk={handleSaveSupplier}
-        okText="Зберегти"
-        cancelText="Скасувати"
-        confirmLoading={createSupplierMutation.isPending || updateSupplierMutation.isPending}
-        destroyOnHidden
-        style={{ top: 20 }}
-        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
-      >
-        <Form form={supplierForm} layout="vertical" style={{ marginTop: 8 }}>
-          <Row gutter={16}>
-            <Col span={14}>
-              <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true, message: "Обов'язкове поле" }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={10}>
-              <Form.Item name="category" label="Категорія" rules={[{ required: true, message: 'Оберіть категорію' }]}>
-                <Select placeholder="Категорія" options={Object.entries(supplierCategoryMap).map(([k, v]) => ({ value: k, label: v.label }))} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="phone" label="Телефон">
-                <Input placeholder="+380 44 123-45-67" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="email" label="Email">
-                <Input type="email" placeholder="info@example.ua" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="contact_person" label="Контактна особа">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="location" label="Локація">
-                <Input placeholder="м. Київ" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="work_schedule" label="Графік роботи" style={{ marginBottom: 0 }}>
-            <Input placeholder="Пн-Пт 9:00-18:00" />
           </Form.Item>
         </Form>
       </Modal>

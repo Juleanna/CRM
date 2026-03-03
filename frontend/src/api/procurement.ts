@@ -1,18 +1,5 @@
 import apiClient from './client'
 
-// Suppliers
-export const getSuppliers = (params?: Record<string, unknown>) =>
-  apiClient.get('/procurement/suppliers/', { params })
-
-export const createSupplier = (data: Record<string, unknown>) =>
-  apiClient.post('/procurement/suppliers/', data)
-
-export const updateSupplier = (id: number, data: Record<string, unknown>) =>
-  apiClient.patch(`/procurement/suppliers/${id}/`, data)
-
-export const deleteSupplier = (id: number) =>
-  apiClient.delete(`/procurement/suppliers/${id}/`)
-
 // Purchases
 export const getPurchases = (params?: Record<string, unknown>) =>
   apiClient.get('/procurement/purchases/', { params })

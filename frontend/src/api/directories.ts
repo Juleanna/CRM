@@ -13,19 +13,6 @@ export const updateCustomer = (id: number, data: Record<string, unknown>) =>
 export const deleteCustomer = (id: number) =>
   apiClient.delete(`/orders/customers/${id}/`)
 
-// Suppliers
-export const getSuppliers = (params?: Record<string, unknown>) =>
-  apiClient.get('/procurement/suppliers/', { params })
-
-export const createSupplier = (data: Record<string, unknown>) =>
-  apiClient.post('/procurement/suppliers/', data)
-
-export const updateSupplier = (id: number, data: Record<string, unknown>) =>
-  apiClient.patch(`/procurement/suppliers/${id}/`, data)
-
-export const deleteSupplier = (id: number) =>
-  apiClient.delete(`/procurement/suppliers/${id}/`)
-
 // Warehouses
 export const getWarehouses = (params?: Record<string, unknown>) =>
   apiClient.get('/warehouse/warehouses/', { params })
