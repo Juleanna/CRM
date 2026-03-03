@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Badge, theme, Modal, Form, Input, Button, Tag, message, Tabs } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Badge, theme, Modal, Form, Input, Button, Tag, message, Tabs, Spin } from 'antd'
+import { useQuery } from '@tanstack/react-query'
+import { getUnreadCount } from '../api/notifications'
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -41,22 +43,52 @@ const roleLabels: Record<string, { label: string; color: string }> = {
   accountant: { label: 'Бухгалтер', color: 'cyan' },
 }
 
-const menuItems = [
-  { key: '/', icon: <DashboardOutlined />, label: 'Дашборд' },
-  { key: '/orders', icon: <FileTextOutlined />, label: 'Замовлення' },
-  { key: '/contracts', icon: <ProjectOutlined />, label: 'Договори' },
-  { key: '/warehouse', icon: <DatabaseOutlined />, label: 'Склад' },
-  { key: '/procurement', icon: <ShoppingCartOutlined />, label: 'Закупівлі' },
-  { key: '/production', icon: <ToolOutlined />, label: 'Виробництво' },
-  { key: '/tasks', icon: <CheckSquareOutlined />, label: 'Завдання' },
-  { key: '/requests', icon: <SendOutlined />, label: 'Запити' },
-  { key: '/chat', icon: <MessageOutlined />, label: 'Чат' },
-  { key: '/notifications', icon: <BellOutlined />, label: 'Сповіщення' },
-  { key: '/analytics', icon: <BarChartOutlined />, label: 'Аналітика' },
-  { key: '/users', icon: <TeamOutlined />, label: 'Користувачі' },
-  { key: '/permissions', icon: <SafetyOutlined />, label: 'Права доступу' },
-  { key: '/directories', icon: <BookOutlined />, label: 'Довідники' },
-  { key: '/tech-specs', icon: <FileProtectOutlined />, label: 'Тех. специфікації' },
+const allMenuGroups = [
+  {
+    label: 'Головне',
+    children: [
+      { key: '/', icon: <DashboardOutlined />, label: 'Дашборд', module: 'dashboard' },
+      { key: '/analytics', icon: <BarChartOutlined />, label: 'Аналітика', module: 'analytics' },
+    ],
+  },
+  {
+    label: 'Бізнес',
+    children: [
+      { key: '/orders', icon: <FileTextOutlined />, label: 'Замовлення', module: 'orders' },
+      { key: '/contracts', icon: <ProjectOutlined />, label: 'Договори', module: 'contracts' },
+      { key: '/procurement', icon: <ShoppingCartOutlined />, label: 'Закупівлі', module: 'procurement' },
+    ],
+  },
+  {
+    label: 'Операції',
+    children: [
+      { key: '/warehouse', icon: <DatabaseOutlined />, label: 'Склад', module: 'warehouse' },
+      { key: '/production', icon: <ToolOutlined />, label: 'Виробництво', module: 'production' },
+      { key: '/tech-specs', icon: <FileProtectOutlined />, label: 'Тех. специфікації', module: 'tech_specs' },
+    ],
+  },
+  {
+    label: 'Робочий процес',
+    children: [
+      { key: '/tasks', icon: <CheckSquareOutlined />, label: 'Завдання', module: 'tasks' },
+      { key: '/requests', icon: <SendOutlined />, label: 'Запити', module: 'requests' },
+    ],
+  },
+  {
+    label: 'Комунікації',
+    children: [
+      { key: '/chat', icon: <MessageOutlined />, label: 'Чат', module: 'chat' },
+      { key: '/notifications', icon: <BellOutlined />, label: 'Сповіщення', module: 'notifications' },
+    ],
+  },
+  {
+    label: 'Адміністрування',
+    children: [
+      { key: '/users', icon: <TeamOutlined />, label: 'Користувачі', module: 'users' },
+      { key: '/permissions', icon: <SafetyOutlined />, label: 'Права доступу', module: 'users' },
+      { key: '/directories', icon: <BookOutlined />, label: 'Довідники', module: 'directories' },
+    ],
+  },
 ]
 
 function DashboardLayout() {
@@ -64,9 +96,39 @@ function DashboardLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileTab, setProfileTab] = useState('info')
   const [saving, setSaving] = useState(false)
-  const { user, logout, setUser } = useAuthStore()
+  const { user, logout, setUser, hasPermission, isAuthenticated } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Fetch profile on mount if authenticated but user not loaded (page refresh)
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      apiClient.get('/accounts/profile/')
+        .then(({ data }) => setUser(data))
+        .catch(() => {
+          logout()
+          navigate('/login')
+        })
+    }
+  }, [isAuthenticated, user, setUser, logout, navigate])
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['unread-count'],
+    queryFn: () => getUnreadCount().then(r => r.data),
+    refetchInterval: 30000,
+  })
+  const unreadCount = unreadData?.count ?? 0
+
+  const menuItems = useMemo(() =>
+    allMenuGroups
+      .map(group => ({
+        type: 'group' as const,
+        label: group.label,
+        children: group.children.filter(item => hasPermission(item.module, 'can_view')),
+      }))
+      .filter(group => group.children.length > 0),
+    [hasPermission, user]
+  )
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
   const [profileForm] = Form.useForm()
   const [passwordForm] = Form.useForm()
@@ -133,6 +195,15 @@ function DashboardLayout() {
     { key: 'logout', icon: <LogoutOutlined />, label: 'Вийти', danger: true, onClick: handleLogout },
   ]
 
+  // Show loading while profile is being fetched after page refresh
+  if (isAuthenticated && !user) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    )
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider
@@ -183,7 +254,7 @@ function DashboardLayout() {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <Badge count={3} size="small">
+            <Badge count={unreadCount} size="small">
               <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} onClick={() => navigate('/notifications')} />
             </Badge>
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">

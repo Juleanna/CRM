@@ -37,7 +37,7 @@ class HasModulePermission(BasePermission):
         perm_field = self.ACTION_MAP.get(action, 'can_view')
 
         if not user.permission_group:
-            return False
+            return True  # no group assigned → full access by default
 
         try:
             mp = user.permission_group.module_permissions.get(module=module)

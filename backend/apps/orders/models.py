@@ -8,8 +8,16 @@ class Customer(models.Model):
         DIRECT_ORDER = 'direct_order', 'Пряме замовлення'
         AGREEMENT = 'agreement', 'Угода'
 
+    class CustomerType(models.TextChoices):
+        CUSTOMER = 'customer', 'Замовник'
+        SUPPLIER = 'supplier', 'Постачальник'
+        CONTRACTOR = 'contractor', 'Підрядник'
+        OWN_COMPANY = 'own_company', 'Наша фірма'
+        RECIPIENT = 'recipient', 'Одержувач'
+
     company_name = models.CharField('Назва підприємства', max_length=255)
-    cooperation_form = models.CharField('Форма співпраці', max_length=30, choices=CooperationForm.choices)
+    cooperation_forms = models.JSONField('Форми співпраці', default=list, blank=True)
+    customer_types = models.JSONField('Типи контрагента', default=list, blank=True)
     address = models.TextField('Адреса', blank=True)
     phone = models.CharField('Телефон', max_length=50, blank=True)
     email = models.EmailField('Email', blank=True)

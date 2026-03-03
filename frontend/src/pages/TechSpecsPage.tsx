@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, DatePicker, Upload, Descriptions } from 'antd'
+import { useState, useEffect } from 'react'
+import { Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, DatePicker, Upload, Descriptions, Spin } from 'antd'
 import type { UploadFile } from 'antd'
 import {
   PlusOutlined,
@@ -12,127 +12,16 @@ import {
   DownloadOutlined,
   CalendarOutlined,
 } from '@ant-design/icons'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  getTechSpecs, createTechSpec, updateTechSpec, deleteTechSpec,
+  getAffiliations, createAffiliation, updateAffiliation, deleteAffiliation,
+} from '../api/techSpecs'
+import type { PaginatedResponse, TechnicalSpecification, Affiliation } from '../types'
+import { useAuthStore } from '../store/authStore'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
-
-// --- Mock Data ---
-
-const affiliations = [
-  { id: 1, name: 'Військова форма' },
-  { id: 2, name: 'Спецодяг' },
-  { id: 3, name: 'Захисне спорядження' },
-  { id: 4, name: 'Камуфляж' },
-  { id: 5, name: 'Аксесуари' },
-]
-
-const techSpecs = [
-  {
-    id: 1,
-    title: 'ТС на куртку зимову польову',
-    number: 'ТС-2025-001',
-    affiliation: { id: 1, name: 'Військова форма' },
-    affiliation_name: 'Військова форма',
-    description: 'Технічна специфікація на виробництво зимової польової куртки з утеплювачем',
-    effective_date: '2025-01-15',
-    expiry_date: '2027-01-15',
-    status: 'active',
-    file: '/media/tech_specs/ts-2025-001.pdf',
-    notes: 'Затверджено замовником',
-    created_by_name: 'Петренко І.В.',
-    created_at: '2025-01-10',
-  },
-  {
-    id: 2,
-    title: 'ТС на штани літні бойові',
-    number: 'ТС-2025-002',
-    affiliation: { id: 1, name: 'Військова форма' },
-    affiliation_name: 'Військова форма',
-    description: 'Технічна специфікація на літні бойові штани з посиленими колінами',
-    effective_date: '2025-02-01',
-    expiry_date: '2026-12-31',
-    status: 'active',
-    file: '/media/tech_specs/ts-2025-002.pdf',
-    notes: '',
-    created_by_name: 'Ковальчук А.М.',
-    created_at: '2025-01-28',
-  },
-  {
-    id: 3,
-    title: 'ТС на костюм захисний',
-    number: 'ТС-2025-003',
-    affiliation: { id: 3, name: 'Захисне спорядження' },
-    affiliation_name: 'Захисне спорядження',
-    description: 'Технічна специфікація на захисний костюм для промислових підприємств',
-    effective_date: '2025-03-01',
-    expiry_date: null,
-    status: 'draft',
-    file: null,
-    notes: 'На узгодженні з технологом',
-    created_by_name: 'Мельник В.О.',
-    created_at: '2025-02-15',
-  },
-  {
-    id: 4,
-    title: 'ТС на футболку (поло) форменну',
-    number: 'ТС-2024-015',
-    affiliation: { id: 2, name: 'Спецодяг' },
-    affiliation_name: 'Спецодяг',
-    description: 'Технічна специфікація на форменну футболку-поло з вишитим логотипом',
-    effective_date: '2024-05-01',
-    expiry_date: '2025-05-01',
-    status: 'expired',
-    file: '/media/tech_specs/ts-2024-015.pdf',
-    notes: 'Потребує оновлення',
-    created_by_name: 'Петренко І.В.',
-    created_at: '2024-04-20',
-  },
-  {
-    id: 5,
-    title: 'ТС на бронежилет чохол',
-    number: 'ТС-2025-004',
-    affiliation: { id: 3, name: 'Захисне спорядження' },
-    affiliation_name: 'Захисне спорядження',
-    description: 'Технічна специфікація на чохол для бронежилета з системою MOLLE',
-    effective_date: '2025-04-01',
-    expiry_date: '2028-04-01',
-    status: 'active',
-    file: '/media/tech_specs/ts-2025-004.pdf',
-    notes: '',
-    created_by_name: 'Ковальчук А.М.',
-    created_at: '2025-03-10',
-  },
-  {
-    id: 6,
-    title: 'ТС на рюкзак тактичний 45L',
-    number: 'ТС-2025-005',
-    affiliation: { id: 5, name: 'Аксесуари' },
-    affiliation_name: 'Аксесуари',
-    description: 'Технічна специфікація на тактичний рюкзак об`ємом 45 літрів',
-    effective_date: null,
-    expiry_date: null,
-    status: 'draft',
-    file: null,
-    notes: 'В процесі розробки',
-    created_by_name: 'Мельник В.О.',
-    created_at: '2025-02-20',
-  },
-  {
-    id: 7,
-    title: 'ТС на камуфляж "Піксель" ЗСУ',
-    number: 'ТС-2024-010',
-    affiliation: { id: 4, name: 'Камуфляж' },
-    affiliation_name: 'Камуфляж',
-    description: 'Технічна специфікація на тканину камуфляжного забарвлення "Піксель" стандарту ЗСУ',
-    effective_date: '2024-01-01',
-    expiry_date: '2024-12-31',
-    status: 'cancelled',
-    file: '/media/tech_specs/ts-2024-010.pdf',
-    notes: 'Замінено новою специфікацією',
-    created_by_name: 'Петренко І.В.',
-    created_at: '2023-12-01',
-  },
-]
 
 const statusMap: Record<string, { label: string; color: string }> = {
   draft: { label: 'Чернетка', color: 'default' },
@@ -142,18 +31,123 @@ const statusMap: Record<string, { label: string; color: string }> = {
 }
 
 function TechSpecsPage() {
+  const { hasPermission } = useAuthStore()
+  const canCreate = hasPermission('tech_specs', 'can_create')
+  const canEdit = hasPermission('tech_specs', 'can_edit')
+  const canDelete = hasPermission('tech_specs', 'can_delete')
+
+  const queryClient = useQueryClient()
+  const [messageApi, contextHolder] = message.useMessage()
+
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [affiliationFilter, setAffiliationFilter] = useState<number | ''>('')
   const [modalOpen, setModalOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [editingRecord, setEditingRecord] = useState<typeof techSpecs[0] | null>(null)
-  const [viewingRecord, setViewingRecord] = useState<typeof techSpecs[0] | null>(null)
+  const [editingRecord, setEditingRecord] = useState<TechnicalSpecification | null>(null)
+  const [viewingRecord, setViewingRecord] = useState<TechnicalSpecification | null>(null)
   const [affiliationModalOpen, setAffiliationModalOpen] = useState(false)
+  const [editingAffiliation, setEditingAffiliation] = useState<Affiliation | null>(null)
   const [affiliationForm] = Form.useForm()
   const [form] = Form.useForm()
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
+  /* ── Queries ─────────────────────────────────────────────── */
+  const queryParams: Record<string, unknown> = { page_size: 1000 }
+  if (search) queryParams.search = search
+  if (statusFilter) queryParams.status = statusFilter
+  if (affiliationFilter) queryParams.affiliation = affiliationFilter
+
+  const { data: techSpecsData, isLoading: specsLoading } = useQuery<PaginatedResponse<TechnicalSpecification>>({
+    queryKey: ['techSpecs', search, statusFilter, affiliationFilter],
+    queryFn: () => getTechSpecs(queryParams).then(r => r.data),
+  })
+
+  const { data: affiliationsData } = useQuery<PaginatedResponse<Affiliation>>({
+    queryKey: ['affiliations'],
+    queryFn: () => getAffiliations({ page_size: 1000 }).then(r => r.data),
+  })
+
+  const techSpecs = techSpecsData?.results ?? []
+  const affiliations = affiliationsData?.results ?? []
+
+  /* ── Tech Spec Mutations ────────────────────────────────── */
+  const createSpecMutation = useMutation({
+    mutationFn: (data: FormData | Record<string, unknown>) => createTechSpec(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['techSpecs'] })
+      messageApi.success('Специфікацію створено')
+      closeModal()
+    },
+    onError: () => {
+      messageApi.error('Помилка при створенні специфікації')
+    },
+  })
+
+  const updateSpecMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: FormData | Record<string, unknown> }) =>
+      updateTechSpec(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['techSpecs'] })
+      messageApi.success('Специфікацію оновлено')
+      closeModal()
+    },
+    onError: () => {
+      messageApi.error('Помилка при оновленні специфікації')
+    },
+  })
+
+  const deleteSpecMutation = useMutation({
+    mutationFn: (id: number) => deleteTechSpec(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['techSpecs'] })
+      messageApi.success('Специфікацію видалено')
+    },
+    onError: () => {
+      messageApi.error('Помилка при видаленні специфікації')
+    },
+  })
+
+  /* ── Affiliation Mutations ──────────────────────────────── */
+  const createAffiliationMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => createAffiliation(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['affiliations'] })
+      messageApi.success('Приналежність створено')
+      affiliationForm.resetFields()
+      setEditingAffiliation(null)
+    },
+    onError: () => {
+      messageApi.error('Помилка при створенні приналежності')
+    },
+  })
+
+  const updateAffiliationMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      updateAffiliation(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['affiliations'] })
+      messageApi.success('Приналежність оновлено')
+      affiliationForm.resetFields()
+      setEditingAffiliation(null)
+    },
+    onError: () => {
+      messageApi.error('Помилка при оновленні приналежності')
+    },
+  })
+
+  const deleteAffiliationMutation = useMutation({
+    mutationFn: (id: number) => deleteAffiliation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['affiliations'] })
+      messageApi.success('Приналежність видалено')
+    },
+    onError: () => {
+      messageApi.error('Помилка при видаленні приналежності')
+    },
+  })
+
+  /* ── Tech Spec Modal Handlers ───────────────────────────── */
   const openCreate = () => {
     setEditingRecord(null)
     form.resetFields()
@@ -161,51 +155,105 @@ function TechSpecsPage() {
     setModalOpen(true)
   }
 
-  const openEdit = (record: typeof techSpecs[0]) => {
+  const openEdit = (record: TechnicalSpecification) => {
     setEditingRecord(record)
-    form.setFieldsValue({
-      ...record,
-      affiliation_id: record.affiliation?.id,
-      effective_date: record.effective_date ? dayjs(record.effective_date) : null,
-      expiry_date: record.expiry_date ? dayjs(record.expiry_date) : null,
-    })
-    setFileList(record.file ? [{ uid: '-1', name: record.file.split('/').pop() || 'document.pdf', status: 'done', url: record.file }] : [])
     setModalOpen(true)
+  }
+
+  useEffect(() => {
+    if (!modalOpen) return
+    if (editingRecord) {
+      form.setFieldsValue({
+        ...editingRecord,
+        affiliation_id: editingRecord.affiliation,
+        effective_date: editingRecord.effective_date ? dayjs(editingRecord.effective_date) : null,
+        expiry_date: editingRecord.expiry_date ? dayjs(editingRecord.expiry_date) : null,
+      })
+      setFileList(editingRecord.file ? [{ uid: '-1', name: editingRecord.file.split('/').pop() || 'document.pdf', status: 'done', url: editingRecord.file }] : [])
+    } else {
+      form.resetFields()
+      setFileList([])
+    }
+  }, [modalOpen, editingRecord, form])
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setEditingRecord(null)
+    form.resetFields()
+    setFileList([])
   }
 
   const handleSave = async () => {
     try {
-      await form.validateFields()
-      message.success(editingRecord ? 'Специфікацію оновлено' : 'Специфікацію створено')
-      setModalOpen(false)
+      const values = await form.validateFields()
+
+      // Use FormData if there's a new file to upload
+      const hasNewFile = fileList.length > 0 && fileList[0].originFileObj
+      let payload: FormData | Record<string, unknown>
+
+      if (hasNewFile) {
+        const fd = new FormData()
+        fd.append('title', values.title)
+        if (values.number) fd.append('number', values.number)
+        if (values.affiliation_id) fd.append('affiliation', String(values.affiliation_id))
+        if (values.description) fd.append('description', values.description)
+        if (values.effective_date) fd.append('effective_date', values.effective_date.format('YYYY-MM-DD'))
+        if (values.expiry_date) fd.append('expiry_date', values.expiry_date.format('YYYY-MM-DD'))
+        if (values.status) fd.append('status', values.status)
+        if (values.notes) fd.append('notes', values.notes)
+        fd.append('file', fileList[0].originFileObj as File)
+        payload = fd
+      } else {
+        payload = {
+          title: values.title,
+          number: values.number || '',
+          affiliation: values.affiliation_id || null,
+          description: values.description || '',
+          effective_date: values.effective_date ? values.effective_date.format('YYYY-MM-DD') : null,
+          expiry_date: values.expiry_date ? values.expiry_date.format('YYYY-MM-DD') : null,
+          status: values.status || 'draft',
+          notes: values.notes || '',
+        }
+      }
+
+      if (editingRecord) {
+        updateSpecMutation.mutate({ id: editingRecord.id, data: payload })
+      } else {
+        createSpecMutation.mutate(payload)
+      }
     } catch {
       // validation
     }
   }
 
-  const handleDelete = () => {
-    message.success('Специфікацію видалено')
+  const handleDelete = (id: number) => {
+    deleteSpecMutation.mutate(id)
   }
 
+  /* ── Affiliation Handlers ───────────────────────────────── */
   const handleAffiliationSave = async () => {
     try {
-      await affiliationForm.validateFields()
-      message.success('Приналежність збережено')
-      setAffiliationModalOpen(false)
-      affiliationForm.resetFields()
+      const values = await affiliationForm.validateFields()
+      if (editingAffiliation) {
+        updateAffiliationMutation.mutate({ id: editingAffiliation.id, data: values })
+      } else {
+        createAffiliationMutation.mutate(values)
+      }
     } catch {
       // validation
     }
   }
 
-  const filtered = techSpecs.filter(item => {
-    const q = search.toLowerCase()
-    const matchSearch = !search || item.title.toLowerCase().includes(q) || item.number.toLowerCase().includes(q) || item.affiliation_name.toLowerCase().includes(q)
-    const matchStatus = !statusFilter || item.status === statusFilter
-    const matchAffiliation = !affiliationFilter || item.affiliation?.id === affiliationFilter
-    return matchSearch && matchStatus && matchAffiliation
-  })
+  const startEditAffiliation = (record: Affiliation) => {
+    setEditingAffiliation(record)
+    affiliationForm.setFieldsValue({ name: record.name })
+  }
 
+  const handleDeleteAffiliation = (id: number) => {
+    deleteAffiliationMutation.mutate(id)
+  }
+
+  /* ── Table columns ──────────────────────────────────────── */
   const columns = [
     {
       title: 'Номер',
@@ -219,14 +267,14 @@ function TechSpecsPage() {
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      sorter: (a: typeof techSpecs[0], b: typeof techSpecs[0]) => a.title.localeCompare(b.title),
+      sorter: (a: TechnicalSpecification, b: TechnicalSpecification) => a.title.localeCompare(b.title),
     },
     {
       title: 'Приналежність',
       dataIndex: 'affiliation_name',
       key: 'affiliation_name',
       width: 180,
-      render: (v: string) => v ? <Tag color="blue">{v}</Tag> : <Text type="secondary">—</Text>,
+      render: (v: string) => v ? <Tag color="blue">{v}</Tag> : <Text type="secondary">--</Text>,
     },
     {
       title: 'Статус',
@@ -240,15 +288,15 @@ function TechSpecsPage() {
       dataIndex: 'effective_date',
       key: 'effective_date',
       width: 140,
-      render: (v: string | null) => v ? dayjs(v).format('DD.MM.YYYY') : '—',
-      sorter: (a: typeof techSpecs[0], b: typeof techSpecs[0]) => (a.effective_date || '').localeCompare(b.effective_date || ''),
+      render: (v: string | null) => v ? dayjs(v).format('DD.MM.YYYY') : '--',
+      sorter: (a: TechnicalSpecification, b: TechnicalSpecification) => (a.effective_date || '').localeCompare(b.effective_date || ''),
     },
     {
       title: 'Дата закінчення',
       dataIndex: 'expiry_date',
       key: 'expiry_date',
       width: 140,
-      render: (v: string | null) => v ? dayjs(v).format('DD.MM.YYYY') : '—',
+      render: (v: string | null) => v ? dayjs(v).format('DD.MM.YYYY') : '--',
     },
     {
       title: 'Документ',
@@ -256,8 +304,8 @@ function TechSpecsPage() {
       key: 'file',
       width: 100,
       render: (v: string | null) => v
-        ? <Button type="link" size="small" icon={<DownloadOutlined />}>Файл</Button>
-        : <Text type="secondary">—</Text>,
+        ? <Button type="link" size="small" icon={<DownloadOutlined />} href={v} target="_blank">Файл</Button>
+        : <Text type="secondary">--</Text>,
     },
     {
       title: 'Створив',
@@ -269,13 +317,13 @@ function TechSpecsPage() {
       title: 'Дії',
       key: 'actions',
       width: 120,
-      render: (_: unknown, record: typeof techSpecs[0]) => (
+      render: (_: unknown, record: TechnicalSpecification) => (
         <Space>
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => { setViewingRecord(record); setDetailOpen(true) }} />
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-          <Popconfirm title="Видалити специфікацію?" onConfirm={handleDelete} okText="Так" cancelText="Ні">
+          {canEdit && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} />}
+          {canDelete && <Popconfirm title="Видалити специфікацію?" onConfirm={() => handleDelete(record.id)} okText="Так" cancelText="Ні">
             <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          </Popconfirm>}
         </Space>
       ),
     },
@@ -283,14 +331,16 @@ function TechSpecsPage() {
 
   return (
     <div>
+      {contextHolder}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0 }}>
           <FileTextOutlined style={{ marginRight: 8 }} />
           Реєстр технічних специфікацій
         </Title>
         <Space>
-          <Button onClick={() => setAffiliationModalOpen(true)}>Приналежності</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Створити</Button>
+          <Button onClick={() => { setEditingAffiliation(null); affiliationForm.resetFields(); setAffiliationModalOpen(true) }}>Приналежності</Button>
+          {canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Створити</Button>}
         </Space>
       </div>
 
@@ -329,17 +379,20 @@ function TechSpecsPage() {
       </Card>
 
       <Card>
-        <Table columns={columns} dataSource={filtered} rowKey="id" size="middle" pagination={{ pageSize: 10, showTotal: total => `Всього: ${total}` }} />
+        <Spin spinning={specsLoading}>
+          <Table columns={columns} dataSource={techSpecs} rowKey="id" size="middle" pagination={{ pageSize: 10, showTotal: total => `Всього: ${total}` }} />
+        </Spin>
       </Card>
 
       {/* Create/Edit Modal */}
       <Modal
         title={editingRecord ? 'Редагувати специфікацію' : 'Створити специфікацію'}
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        onCancel={closeModal}
         onOk={handleSave}
         okText="Зберегти"
         cancelText="Скасувати"
+        confirmLoading={createSpecMutation.isPending || updateSpecMutation.isPending}
         width={640}
         destroyOnHidden
       >
@@ -395,7 +448,7 @@ function TechSpecsPage() {
         onCancel={() => setDetailOpen(false)}
         footer={[
           <Button key="close" onClick={() => setDetailOpen(false)}>Закрити</Button>,
-          <Button key="edit" type="primary" icon={<EditOutlined />} onClick={() => { setDetailOpen(false); if (viewingRecord) openEdit(viewingRecord) }}>
+          canEdit && <Button key="edit" type="primary" icon={<EditOutlined />} onClick={() => { setDetailOpen(false); if (viewingRecord) openEdit(viewingRecord) }}>
             Редагувати
           </Button>,
         ]}
@@ -407,22 +460,22 @@ function TechSpecsPage() {
             <Descriptions.Item label="Статус" span={1}><Tag color={statusMap[viewingRecord.status]?.color}>{statusMap[viewingRecord.status]?.label}</Tag></Descriptions.Item>
             <Descriptions.Item label="Назва" span={2}>{viewingRecord.title}</Descriptions.Item>
             <Descriptions.Item label="Приналежність" span={2}>
-              {viewingRecord.affiliation_name ? <Tag color="blue">{viewingRecord.affiliation_name}</Tag> : '—'}
+              {viewingRecord.affiliation_name ? <Tag color="blue">{viewingRecord.affiliation_name}</Tag> : '--'}
             </Descriptions.Item>
-            <Descriptions.Item label="Опис" span={2}>{viewingRecord.description || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Опис" span={2}>{viewingRecord.description || '--'}</Descriptions.Item>
             <Descriptions.Item label="Дата введення в дію" span={1}>
               <CalendarOutlined style={{ marginRight: 4 }} />
-              {viewingRecord.effective_date ? dayjs(viewingRecord.effective_date).format('DD.MM.YYYY') : '—'}
+              {viewingRecord.effective_date ? dayjs(viewingRecord.effective_date).format('DD.MM.YYYY') : '--'}
             </Descriptions.Item>
             <Descriptions.Item label="Дата закінчення" span={1}>
-              {viewingRecord.expiry_date ? dayjs(viewingRecord.expiry_date).format('DD.MM.YYYY') : '—'}
+              {viewingRecord.expiry_date ? dayjs(viewingRecord.expiry_date).format('DD.MM.YYYY') : '--'}
             </Descriptions.Item>
             <Descriptions.Item label="Документ" span={2}>
               {viewingRecord.file
-                ? <Button type="link" icon={<DownloadOutlined />} style={{ padding: 0 }}>Завантажити файл</Button>
+                ? <Button type="link" icon={<DownloadOutlined />} href={viewingRecord.file} target="_blank" style={{ padding: 0 }}>Завантажити файл</Button>
                 : <Text type="secondary">Файл не завантажено</Text>}
             </Descriptions.Item>
-            <Descriptions.Item label="Примітки" span={2}>{viewingRecord.notes || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Примітки" span={2}>{viewingRecord.notes || '--'}</Descriptions.Item>
             <Descriptions.Item label="Створив" span={1}>{viewingRecord.created_by_name}</Descriptions.Item>
             <Descriptions.Item label="Дата створення" span={1}>{dayjs(viewingRecord.created_at).format('DD.MM.YYYY')}</Descriptions.Item>
           </Descriptions>
@@ -433,7 +486,7 @@ function TechSpecsPage() {
       <Modal
         title="Довідник приналежностей"
         open={affiliationModalOpen}
-        onCancel={() => setAffiliationModalOpen(false)}
+        onCancel={() => { setAffiliationModalOpen(false); setEditingAffiliation(null); affiliationForm.resetFields() }}
         footer={null}
         width={500}
       >
@@ -449,26 +502,40 @@ function TechSpecsPage() {
                 title: 'Дії',
                 key: 'actions',
                 width: 80,
-                render: () => (
+                render: (_: unknown, record: Affiliation) => (
                   <Space>
-                    <Button type="link" size="small" icon={<EditOutlined />} />
-                    <Popconfirm title="Видалити?" onConfirm={() => message.success('Видалено')} okText="Так" cancelText="Ні">
+                    {canEdit && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => startEditAffiliation(record)} />}
+                    {canDelete && <Popconfirm title="Видалити?" onConfirm={() => handleDeleteAffiliation(record.id)} okText="Так" cancelText="Ні">
                       <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-                    </Popconfirm>
+                    </Popconfirm>}
                   </Space>
                 ),
               },
             ]}
           />
         </div>
-        <Form form={affiliationForm} layout="inline" style={{ display: 'flex', gap: 8 }}>
+        {(canCreate || editingAffiliation) && <Form form={affiliationForm} layout="inline" style={{ display: 'flex', gap: 8 }}>
           <Form.Item name="name" rules={[{ required: true, message: 'Введіть назву' }]} style={{ flex: 1 }}>
-            <Input placeholder="Нова приналежність" />
+            <Input placeholder={editingAffiliation ? 'Редагувати приналежність' : 'Нова приналежність'} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAffiliationSave}>Додати</Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAffiliationSave}
+              loading={createAffiliationMutation.isPending || updateAffiliationMutation.isPending}
+            >
+              {editingAffiliation ? 'Зберегти' : 'Додати'}
+            </Button>
           </Form.Item>
-        </Form>
+          {editingAffiliation && (
+            <Form.Item>
+              <Button onClick={() => { setEditingAffiliation(null); affiliationForm.resetFields() }}>
+                Скасувати
+              </Button>
+            </Form.Item>
+          )}
+        </Form>}
       </Modal>
     </div>
   )

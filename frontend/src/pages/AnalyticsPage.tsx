@@ -1,66 +1,211 @@
-import { Card, Typography, Row, Col, Statistic, Table, Tag, Progress, List } from 'antd'
-import { ArrowUpOutlined, ArrowDownOutlined, ProjectOutlined, ToolOutlined } from '@ant-design/icons'
+import { Card, Typography, Row, Col, Statistic, Table, Tag, Progress, List, Spin } from 'antd'
+import {
+  ShoppingCartOutlined,
+  FileTextOutlined,
+  ProjectOutlined,
+  ToolOutlined,
+} from '@ant-design/icons'
+import { useQuery } from '@tanstack/react-query'
+import { getDashboardStats, getAnalyticsOverview } from '../api/analytics'
+import type { DashboardStats, AnalyticsOverview } from '../types'
+
 const { Title } = Typography
 
-const projectStats = [
-  { key: '1', project: 'ДГ-2024-001', product: 'Костюм КЛП Ніка', ordered: 50000, produced: 37500, deadline: '2024-06-30', status: 'production' },
-  { key: '2', project: 'ДГ-2024-003', product: 'Куртка зимова ЗСУ', ordered: 100000, produced: 65000, deadline: '2024-04-30', status: 'production' },
-  { key: '3', project: 'ДГ-2024-002', product: 'Штани польові', ordered: 20000, produced: 0, deadline: '2024-05-15', status: 'planning' },
-]
-const statusColors: Record<string, string> = { production: 'green', planning: 'blue', completed: 'default', frozen: 'red' }
-const statusLabels: Record<string, string> = { production: 'Виробництво', planning: 'Планування', completed: 'Завершений', frozen: 'Заморожений' }
-const columns = [
-  { title: 'Проект', dataIndex: 'project', key: 'project', width: 130 },
-  { title: 'Виріб', dataIndex: 'product', key: 'product' },
-  { title: 'Статус', dataIndex: 'status', key: 'status', width: 130, render: (s: string) => <Tag color={statusColors[s]}>{statusLabels[s]}</Tag> },
-  { title: 'Прогрес', key: 'progress', width: 180, render: (_: unknown, r: typeof projectStats[0]) => <Progress percent={Math.round((r.produced / r.ordered) * 100)} size="small" /> },
-  { title: 'Виготовлено / Замовлено', key: 'counts', width: 190, render: (_: unknown, r: typeof projectStats[0]) => `${r.produced.toLocaleString()} / ${r.ordered.toLocaleString()}` },
-  { title: 'Дедлайн', dataIndex: 'deadline', key: 'deadline', width: 110 },
-]
+const statusColors: Record<string, string> = {
+  production: 'green',
+  planning: 'blue',
+  completed: 'default',
+  frozen: 'red',
+}
+const statusLabels: Record<string, string> = {
+  production: 'Виробництво',
+  planning: 'Планування',
+  completed: 'Завершений',
+  frozen: 'Заморожений',
+}
+
+const orderStatusLabels: Record<string, string> = {
+  new: 'Нове',
+  document_collection: 'Збір документів',
+  bidding: 'В процесі торгів',
+  approved: 'Погоджено',
+  won: 'Перемога',
+  lost: 'Програш',
+  frozen: 'Заморожено',
+  rejected: 'Відхилено',
+}
+
 function AnalyticsPage() {
+  // Fetch dashboard stats (cards at the top)
+  const {
+    data: stats,
+    isLoading: statsLoading,
+  } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => getDashboardStats().then(r => r.data),
+  })
+
+  // Fetch analytics overview (table, departments, orders by status)
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+  } = useQuery<AnalyticsOverview>({
+    queryKey: ['analytics-overview'],
+    queryFn: () => getAnalyticsOverview().then(r => r.data),
+  })
+
+  const activeContracts = overview?.active_contracts ?? []
+  const productionByDept = overview?.production_by_department ?? []
+  const ordersByStatus = overview?.orders_by_status ?? []
+  const materialsTotalValue = overview?.materials_total_value ?? 0
+
+  const columns = [
+    {
+      title: 'Проект',
+      dataIndex: 'contract_number',
+      key: 'contract_number',
+      width: 130,
+    },
+    {
+      title: 'Виріб',
+      dataIndex: 'order_title',
+      key: 'order_title',
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (s: string) => <Tag color={statusColors[s]}>{statusLabels[s] ?? s}</Tag>,
+    },
+    {
+      title: 'Прогрес',
+      key: 'progress',
+      width: 180,
+      render: (_: unknown, r: AnalyticsOverview['active_contracts'][0]) => {
+        const percent = r.total_quantity > 0 ? Math.round((r.produced / r.total_quantity) * 100) : 0
+        return <Progress percent={percent} size="small" />
+      },
+    },
+    {
+      title: 'Виготовлено / Замовлено',
+      key: 'counts',
+      width: 190,
+      render: (_: unknown, r: AnalyticsOverview['active_contracts'][0]) =>
+        `${r.produced.toLocaleString('uk-UA')} / ${r.total_quantity.toLocaleString('uk-UA')}`,
+    },
+  ]
+
+  const isLoading = statsLoading || overviewLoading
+
   return (
     <div>
       <Title level={3} style={{ marginBottom: 24 }}>Аналітика</Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col span={6}><Card><Statistic title="Дохід за місяць" value={2450000} suffix="грн" prefix={<ArrowUpOutlined />} valueStyle={{ color: '#3f8600' }} /></Card></Col>
-        <Col span={6}><Card><Statistic title="Витрати за місяць" value={1180000} suffix="грн" prefix={<ArrowDownOutlined />} valueStyle={{ color: '#cf1322' }} /></Card></Col>
-        <Col span={6}><Card><Statistic title="Виробів за місяць" value={12500} prefix={<ToolOutlined />} /></Card></Col>
-        <Col span={6}><Card><Statistic title="Замовлень за місяць" value={8} prefix={<ProjectOutlined />} /></Card></Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col span={16}>
-          <Card title="Проекти виробництва">
-            <Table columns={columns} dataSource={projectStats} pagination={false} size="middle" />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="Виробничі підрозділи" style={{ marginBottom: 16 }}>
-            <List size="small" dataSource={[
-              { name: 'Головний цех', projects: 3, capacity: 85 },
-              { name: 'Цех Ямпіль', projects: 2, capacity: 60 },
-              { name: 'Цех Вінниця', projects: 1, capacity: 40 },
-            ]} renderItem={(item) => (
-              <List.Item>
-                <div style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>{item.name}</span><span style={{ fontSize: 12, color: '#8c8c8c' }}>{item.projects} проекти</span></div>
-                  <Progress percent={item.capacity} size="small" status={item.capacity > 80 ? 'exception' : 'active'} />
-                </div>
-              </List.Item>
-            )} />
-          </Card>
-          <Card title="Закупівлі">
-            <List size="small" dataSource={[
-              { label: 'Всього закупівель', value: 15 },
-              { label: 'В транзиті', value: 3 },
-              { label: 'Затримуються', value: 1 },
-              { label: 'Загальна сума', value: '556 000 грн' },
-            ]} renderItem={(item) => (
-              <List.Item><div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}><span>{item.label}</span><strong>{item.value}</strong></div></List.Item>
-            )} />
-          </Card>
-        </Col>
-      </Row>
+
+      <Spin spinning={isLoading}>
+        {/* Stats cards */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Активних замовлень"
+                value={stats?.active_orders ?? 0}
+                prefix={<ShoppingCartOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Контрактів у виробництві"
+                value={stats?.contracts_in_production ?? 0}
+                prefix={<ProjectOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Очікуваних закупівель"
+                value={stats?.pending_purchases ?? 0}
+                prefix={<FileTextOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="Відкритих завдань"
+                value={stats?.open_tasks ?? 0}
+                prefix={<ToolOutlined />}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          {/* Projects table */}
+          <Col span={16}>
+            <Card title="Проекти виробництва">
+              <Table
+                columns={columns}
+                dataSource={activeContracts}
+                rowKey="id"
+                pagination={false}
+                size="middle"
+                locale={{ emptyText: 'Немає активних проектів' }}
+              />
+            </Card>
+          </Col>
+
+          <Col span={8}>
+            {/* Production by department */}
+            <Card title="Виробничі підрозділи" style={{ marginBottom: 16 }}>
+              <List
+                size="small"
+                locale={{ emptyText: 'Немає даних' }}
+                dataSource={productionByDept}
+                renderItem={(item) => (
+                  <List.Item>
+                    <div style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span>{item.department__name}</span>
+                        <span style={{ fontSize: 12, color: '#8c8c8c' }}>{item.total.toLocaleString('uk-UA')} одиниць</span>
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+
+            {/* Orders by status + materials value */}
+            <Card title="Замовлення за статусами">
+              <List
+                size="small"
+                locale={{ emptyText: 'Немає даних' }}
+                dataSource={[
+                  ...ordersByStatus.map(item => ({
+                    label: orderStatusLabels[item.status] ?? item.status,
+                    value: item.count,
+                  })),
+                  { label: 'Вартість матеріалів', value: `${materialsTotalValue.toLocaleString('uk-UA')} грн` },
+                  { label: 'Непрочитаних сповіщень', value: stats?.unread_notifications ?? 0 },
+                ]}
+                renderItem={(item) => (
+                  <List.Item>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                      <span>{item.label}</span>
+                      <strong>{typeof item.value === 'number' ? item.value.toLocaleString('uk-UA') : item.value}</strong>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
     </div>
   )
 }
+
 export default AnalyticsPage

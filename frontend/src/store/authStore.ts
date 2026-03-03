@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!state.user) return false
     if (state.user.role === 'superadmin') return true
     const perms = state.user.permission_group_detail?.module_permissions
-    if (!perms) return false
+    if (!perms || perms.length === 0) return true // no group assigned → full access by default
     const mp = perms.find(p => p.module === module)
     return mp ? mp[action] : false
   },

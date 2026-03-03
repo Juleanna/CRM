@@ -5,7 +5,7 @@ from .models import Customer, Order
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'cooperation_form', 'phone', 'email')
+    list_display = ('company_name', 'cooperation_forms', 'customer_types', 'phone', 'email')
 
 
 @admin.register(Order)
