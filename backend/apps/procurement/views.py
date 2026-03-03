@@ -5,15 +5,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from apps.accounts.permissions import HasModulePermission
-from .models import Supplier, Purchase, DeliverySchedule
-from .serializers import SupplierSerializer, PurchaseSerializer, DeliveryScheduleSerializer
-
-
-class SupplierViewSet(viewsets.ModelViewSet):
-    queryset = Supplier.objects.all()
-    serializer_class = SupplierSerializer
-    permission_classes = [IsAuthenticated, HasModulePermission]
-    module = 'procurement'
+from .models import Purchase, DeliverySchedule
+from .serializers import PurchaseSerializer, DeliveryScheduleSerializer
 
 
 class PurchaseViewSet(viewsets.ModelViewSet):

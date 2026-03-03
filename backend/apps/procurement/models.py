@@ -1,33 +1,6 @@
 from django.db import models
 from django.conf import settings
-
-
-class Supplier(models.Model):
-    class Category(models.TextChoices):
-        MANUFACTURER = 'manufacturer', 'Виробник'
-        RETAILER = 'retailer', 'Рітейлер'
-        BOTH = 'both', 'Виробник і рітейлер'
-
-    company_name = models.CharField('Назва підприємства', max_length=255)
-    category = models.CharField('Категорія', max_length=20, choices=Category.choices)
-    details = models.TextField('Деталі підприємства', blank=True)
-    location = models.CharField('Локація', max_length=255, blank=True)
-    work_schedule = models.CharField('Графік роботи', max_length=255, blank=True)
-    phone = models.CharField('Телефон', max_length=50, blank=True)
-    email = models.EmailField('Email', blank=True)
-    contact_person = models.CharField('Контактна особа', max_length=255, blank=True)
-    contact_person_phone = models.CharField('Телефон контактної особи', max_length=50, blank=True)
-    catalog_url = models.URLField('Каталог (посилання)', blank=True)
-    comments = models.TextField('Коментарі', blank=True)
-    created_at = models.DateTimeField('Створено', auto_now_add=True)
-    updated_at = models.DateTimeField('Оновлено', auto_now=True)
-
-    class Meta:
-        verbose_name = 'Постачальник'
-        verbose_name_plural = 'Постачальники'
-
-    def __str__(self):
-        return self.company_name
+from apps.orders.models import Customer
 
 
 class Purchase(models.Model):
@@ -44,7 +17,7 @@ class Purchase(models.Model):
         PAID = 'paid', 'Оплачено'
 
     contract = models.ForeignKey('contracts.Contract', on_delete=models.CASCADE, verbose_name='Договір', related_name='purchases')
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name='Постачальник', related_name='purchases')
+    supplier = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='Постачальник', related_name='purchases')
     status = models.CharField('Статус', max_length=20, choices=Status.choices, default=Status.NEW)
     total_amount = models.DecimalField('Загальна сума', max_digits=12, decimal_places=2, default=0)
     delivery_cost = models.DecimalField('Вартість доставки', max_digits=10, decimal_places=2, default=0)
@@ -91,7 +64,7 @@ class DeliverySchedule(models.Model):
     material_type = models.CharField('Тип', max_length=100, blank=True)
     category = models.CharField('Категорія', max_length=100, blank=True)
     color = models.CharField('Колір', max_length=100, blank=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Постачальник')
+    supplier = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Постачальник')
     ttn = models.CharField('ТТН', max_length=255, blank=True)
     expected_date = models.DateField('Планована дата поставки')
     actual_date = models.DateField('Фактична дата поставки', null=True, blank=True)

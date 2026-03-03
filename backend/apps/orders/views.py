@@ -14,6 +14,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated, HasModulePermission]
     module = 'orders'
+    search_fields = ['company_name', 'email', 'phone']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        customer_types = self.request.query_params.get('customer_types')
+        if customer_types:
+            qs = qs.filter(customer_types__contains=customer_types)
+        return qs
 
 
 class OrderViewSet(viewsets.ModelViewSet):

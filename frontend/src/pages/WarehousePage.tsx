@@ -661,6 +661,8 @@ function WarehousePage() {
         okText={editingMaterial ? 'Зберегти' : 'Додати'}
         cancelText="Скасувати"
         confirmLoading={createMaterialMut.isPending || updateMaterialMut.isPending}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Form form={matForm} layout="vertical">
           <Row gutter={16}>
@@ -749,6 +751,8 @@ function WarehousePage() {
         okText="Додати"
         cancelText="Скасувати"
         confirmLoading={createPatternMut.isPending}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Form form={patForm} layout="vertical">
           <Row gutter={16}>
@@ -800,6 +804,8 @@ function WarehousePage() {
         okText="Створити"
         cancelText="Скасувати"
         confirmLoading={createTransferMut.isPending}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Form form={trForm} layout="vertical">
           <Form.Item

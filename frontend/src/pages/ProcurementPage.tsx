@@ -512,35 +512,41 @@ function ProcurementPage() {
         cancelText="Скасувати"
         confirmLoading={createPurchaseMutation.isPending || updatePurchaseMutation.isPending}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={purchaseForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="supplier" label="Постачальник" rules={[{ required: true, message: 'Оберіть постачальника' }]}>
-            <Select
-              placeholder="Оберіть постачальника"
-              showSearch
-              optionFilterProp="label"
-              options={allSuppliers.map(s => ({ value: s.id, label: s.company_name }))}
-            />
-          </Form.Item>
-          <Form.Item name="contract_number" label="Номер договору">
-            <Input placeholder="ДГ-2024-001" />
-          </Form.Item>
-          <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Оберіть статус' }]}>
-            <Select
-              placeholder="Оберіть статус"
-              options={Object.entries(purchaseStatus).map(([k, v]) => ({ value: k, label: v.label }))}
-            />
-          </Form.Item>
-          <Form.Item name="total_amount" label="Сума (грн)">
-            <InputNumber style={{ width: '100%' }} min={0} placeholder="0" />
-          </Form.Item>
-          <Form.Item name="payment_status" label="Статус оплати">
-            <Select
-              placeholder="Оберіть статус оплати"
-              options={Object.entries(paymentStatusMap).map(([k, v]) => ({ value: k, label: v.label }))}
-            />
-          </Form.Item>
-          <Form.Item name="expected_delivery_date" label="Очікувана дата доставки">
+        <Form form={purchaseForm} layout="vertical" style={{ marginTop: 8 }}>
+          <Row gutter={16}>
+            <Col span={14}>
+              <Form.Item name="supplier" label="Постачальник" rules={[{ required: true, message: 'Оберіть постачальника' }]}>
+                <Select placeholder="Постачальник" showSearch optionFilterProp="label"
+                  options={allSuppliers.map(s => ({ value: s.id, label: s.company_name }))} />
+              </Form.Item>
+            </Col>
+            <Col span={10}>
+              <Form.Item name="contract_number" label="Номер договору">
+                <Input placeholder="ДГ-2024-001" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Оберіть статус' }]}>
+                <Select placeholder="Статус" options={Object.entries(purchaseStatus).map(([k, v]) => ({ value: k, label: v.label }))} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="payment_status" label="Оплата">
+                <Select placeholder="Оплата" options={Object.entries(paymentStatusMap).map(([k, v]) => ({ value: k, label: v.label }))} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="total_amount" label="Сума (грн)">
+                <InputNumber style={{ width: '100%' }} min={0} placeholder="0" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="expected_delivery_date" label="Очікувана дата доставки" style={{ marginBottom: 0 }}>
             <DatePicker style={{ width: '100%' }} placeholder="Оберіть дату" />
           </Form.Item>
         </Form>
@@ -556,30 +562,47 @@ function ProcurementPage() {
         cancelText="Скасувати"
         confirmLoading={createSupplierMutation.isPending || updateSupplierMutation.isPending}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={supplierForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true, message: "Обов'язкове поле" }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="category" label="Категорія" rules={[{ required: true, message: 'Оберіть категорію' }]}>
-            <Select
-              placeholder="Оберіть категорію"
-              options={Object.entries(supplierCategoryMap).map(([k, v]) => ({ value: k, label: v.label }))}
-            />
-          </Form.Item>
-          <Form.Item name="location" label="Локація">
-            <Input placeholder="м. Київ" />
-          </Form.Item>
-          <Form.Item name="phone" label="Телефон">
-            <Input placeholder="+380 44 123-45-67" />
-          </Form.Item>
-          <Form.Item name="email" label="Email">
-            <Input type="email" placeholder="info@example.ua" />
-          </Form.Item>
-          <Form.Item name="contact_person" label="Контактна особа">
-            <Input />
-          </Form.Item>
-          <Form.Item name="work_schedule" label="Графік роботи">
+        <Form form={supplierForm} layout="vertical" style={{ marginTop: 8 }}>
+          <Row gutter={16}>
+            <Col span={14}>
+              <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true, message: "Обов'язкове поле" }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={10}>
+              <Form.Item name="category" label="Категорія" rules={[{ required: true, message: 'Оберіть категорію' }]}>
+                <Select placeholder="Категорія" options={Object.entries(supplierCategoryMap).map(([k, v]) => ({ value: k, label: v.label }))} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="phone" label="Телефон">
+                <Input placeholder="+380 44 123-45-67" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="Email">
+                <Input type="email" placeholder="info@example.ua" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="contact_person" label="Контактна особа">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="location" label="Локація">
+                <Input placeholder="м. Київ" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="work_schedule" label="Графік роботи" style={{ marginBottom: 0 }}>
             <Input placeholder="Пн-Пт 9:00-18:00" />
           </Form.Item>
         </Form>

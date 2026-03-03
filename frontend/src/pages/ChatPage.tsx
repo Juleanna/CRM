@@ -267,6 +267,7 @@ function ChatPage() {
         cancelText="Скасувати"
         confirmLoading={createChatMutation.isPending}
         destroyOnHidden
+        style={{ top: 20 }}
       >
         <Form form={form} layout="vertical">
           <Form.Item

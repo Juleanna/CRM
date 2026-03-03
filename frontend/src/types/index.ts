@@ -73,7 +73,8 @@ export interface PaginatedResponse<T> {
 export interface Customer {
   id: number
   company_name: string
-  cooperation_form: 'tender' | 'direct_order' | 'agreement'
+  cooperation_forms: string[]
+  customer_types: string[]
   address: string
   phone: string
   email: string

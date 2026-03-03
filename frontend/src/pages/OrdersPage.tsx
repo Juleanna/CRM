@@ -297,6 +297,8 @@ function OrdersPage() {
         onCancel={() => setDetailOpen(false)}
         footer={null}
         width={700}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         {selectedOrder && (
           <Descriptions bordered column={2}>
@@ -349,50 +351,32 @@ function OrdersPage() {
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         width={600}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Spin spinning={createMutation.isPending || updateMutation.isPending}>
-          <Form form={form} layout="vertical">
-            <Form.Item
-              name="title"
-              label="Назва"
-              rules={[{ required: true, message: 'Введіть назву замовлення' }]}
-            >
-              <Input placeholder="Назва замовлення" />
-            </Form.Item>
-
-            <Form.Item
-              name="customer"
-              label="Замовник"
-              rules={[{ required: true, message: 'Оберіть замовника' }]}
-            >
-              <Select
-                placeholder="Оберіть замовника"
-                showSearch
-                optionFilterProp="label"
-                options={customers.map(c => ({ value: c.id, label: c.company_name }))}
-              />
-            </Form.Item>
-
+          <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={14}>
                 <Form.Item
-                  name="status"
-                  label="Статус"
-                  initialValue="new"
+                  name="title"
+                  label="Назва"
+                  rules={[{ required: true, message: 'Введіть назву замовлення' }]}
                 >
-                  <Select
-                    options={Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v.label }))}
-                  />
+                  <Input placeholder="Назва замовлення" />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={10}>
                 <Form.Item
-                  name="priority"
-                  label="Пріоритет"
-                  initialValue="medium"
+                  name="customer"
+                  label="Замовник"
+                  rules={[{ required: true, message: 'Оберіть замовника' }]}
                 >
                   <Select
-                    options={Object.entries(priorityMap).map(([k, v]) => ({ value: k, label: v.label }))}
+                    placeholder="Оберіть замовника"
+                    showSearch
+                    optionFilterProp="label"
+                    options={customers.map(c => ({ value: c.id, label: c.company_name }))}
                   />
                 </Form.Item>
               </Col>
@@ -400,27 +384,41 @@ function OrdersPage() {
 
             <Row gutter={16}>
               <Col span={12}>
+                <Form.Item name="status" label="Статус" initialValue="new">
+                  <Select options={Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v.label }))} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="priority" label="Пріоритет" initialValue="medium">
+                  <Select options={Object.entries(priorityMap).map(([k, v]) => ({ value: k, label: v.label }))} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={8}>
                 <Form.Item name="quantity" label="Кількість">
                   <InputNumber style={{ width: '100%' }} min={0} placeholder="0" />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <Form.Item name="payment_amount" label="Сума (грн)">
                   <InputNumber style={{ width: '100%' }} min={0} placeholder="0.00" />
                 </Form.Item>
               </Col>
+              <Col span={8}>
+                <Form.Item name="deadline" label="Дедлайн">
+                  <DatePicker style={{ width: '100%' }} placeholder="Дата" format="DD.MM.YYYY" />
+                </Form.Item>
+              </Col>
             </Row>
-
-            <Form.Item name="deadline" label="Дедлайн">
-              <DatePicker style={{ width: '100%' }} placeholder="Оберіть дату" format="DD.MM.YYYY" />
-            </Form.Item>
 
             <Form.Item name="source" label="Джерело">
               <Input placeholder="Джерело замовлення" />
             </Form.Item>
 
-            <Form.Item name="description" label="Опис">
-              <Input.TextArea rows={3} placeholder="Опис замовлення" />
+            <Form.Item name="description" label="Опис" style={{ marginBottom: 0 }}>
+              <Input.TextArea rows={2} placeholder="Опис замовлення" />
             </Form.Item>
           </Form>
         </Spin>

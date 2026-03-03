@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import Supplier, Purchase, PurchaseItem, DeliverySchedule
-
-
-class SupplierSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Supplier
-        fields = '__all__'
+from .models import Purchase, PurchaseItem, DeliverySchedule
 
 
 class PurchaseItemSerializer(serializers.ModelSerializer):

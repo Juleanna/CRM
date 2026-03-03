@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
-  Table, Tag, Button, Card, Typography, Avatar, Input,
+  Table, Tag, Button, Card, Typography, Avatar, Input, Row, Col,
   Modal, Form, Select, Switch, Space, message, Popconfirm, Spin,
 } from 'antd'
 import {
@@ -311,79 +311,50 @@ function UsersPage() {
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         destroyOnHidden
         width={520}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          style={{ marginTop: 16 }}
-        >
-          <Form.Item
-            name="first_name"
-            label="Ім'я"
-            rules={[{ required: true, message: "Введіть ім'я" }]}
-          >
-            <Input placeholder="Ім'я" />
-          </Form.Item>
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="first_name" label="Ім'я" rules={[{ required: true, message: "Введіть ім'я" }]}>
+                <Input placeholder="Ім'я" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="last_name" label="Прізвище" rules={[{ required: true, message: 'Введіть прізвище' }]}>
+                <Input placeholder="Прізвище" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="last_name"
-            label="Прізвище"
-            rules={[{ required: true, message: 'Введіть прізвище' }]}
-          >
-            <Input placeholder="Прізвище" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Введіть email' }, { type: 'email', message: 'Невірний формат' }]}>
+                <Input placeholder="Email" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="phone" label="Телефон">
+                <Input placeholder="+380XXXXXXXXX" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Введіть email' },
-              { type: 'email', message: 'Невірний формат email' },
-            ]}
-          >
-            <Input placeholder="Email" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="permission_group" label="Група дозволів">
+                <Select placeholder="Група дозволів" allowClear options={permissionGroups.map((g) => ({ value: g.id, label: g.name }))} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="department" label="Підрозділ">
+                <Select placeholder="Підрозділ" allowClear options={departments.map((d) => ({ value: d.id, label: d.name }))} />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="phone"
-            label="Телефон"
-          >
-            <Input placeholder="+380XXXXXXXXX" />
-          </Form.Item>
-
-          <Form.Item
-            name="permission_group"
-            label="Група дозволів"
-          >
-            <Select
-              placeholder="Оберіть групу дозволів"
-              allowClear
-              options={permissionGroups.map((g) => ({
-                value: g.id,
-                label: g.name,
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="department"
-            label="Підрозділ"
-          >
-            <Select
-              placeholder="Оберіть підрозділ"
-              allowClear
-              options={departments.map((d) => ({
-                value: d.id,
-                label: d.name,
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="is_active"
-            label="Активний"
-            valuePropName="checked"
-          >
+          <Form.Item name="is_active" label="Активний" valuePropName="checked" style={{ marginBottom: 0 }}>
             <Switch />
           </Form.Item>
         </Form>

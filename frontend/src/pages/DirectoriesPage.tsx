@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Tabs, Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, Spin } from 'antd'
+import { Tabs, Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, Spin, Row, Col } from 'antd'
 import {
   PlusOutlined,
   SearchOutlined,
@@ -34,6 +34,14 @@ const cooperationFormMap: Record<string, { label: string; color: string }> = {
   tender: { label: 'Тендер', color: 'blue' },
   direct_order: { label: 'Пряме замовлення', color: 'green' },
   agreement: { label: 'Угода', color: 'purple' },
+}
+
+const customerTypeMap: Record<string, { label: string; color: string }> = {
+  customer: { label: 'Замовник', color: 'blue' },
+  supplier: { label: 'Постачальник', color: 'orange' },
+  contractor: { label: 'Підрядник', color: 'cyan' },
+  own_company: { label: 'Наша фірма', color: 'green' },
+  recipient: { label: 'Одержувач', color: 'purple' },
 }
 
 const supplierCategoryMap: Record<string, { label: string; color: string }> = {
@@ -244,7 +252,8 @@ function DirectoriesPage() {
   /* ── Column definitions ─────────────────────────────────── */
   const customerColumns = [
     { title: 'Назва', dataIndex: 'company_name', key: 'company_name', sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => String(a.company_name).localeCompare(String(b.company_name)) },
-    { title: 'Форма співпраці', dataIndex: 'cooperation_form', key: 'cooperation_form', render: (v: string) => <Tag color={cooperationFormMap[v]?.color}>{cooperationFormMap[v]?.label}</Tag> },
+    { title: 'Тип', dataIndex: 'customer_types', key: 'customer_types', render: (v: string[]) => (v || []).map(t => <Tag key={t} color={customerTypeMap[t]?.color}>{customerTypeMap[t]?.label || t}</Tag>) },
+    { title: 'Форма співпраці', dataIndex: 'cooperation_forms', key: 'cooperation_forms', render: (v: string[]) => (v || []).map(f => <Tag key={f} color={cooperationFormMap[f]?.color}>{cooperationFormMap[f]?.label || f}</Tag>) },
     { title: 'Адреса', dataIndex: 'address', key: 'address', ellipsis: true },
     { title: 'Телефон', dataIndex: 'phone', key: 'phone' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
@@ -306,71 +315,104 @@ function DirectoriesPage() {
             <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true, message: 'Обов\'язкове поле' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="cooperation_form" label="Форма співпраці" rules={[{ required: true }]}>
-              <Select options={[{ value: 'tender', label: 'Тендер' }, { value: 'direct_order', label: 'Пряме замовлення' }, { value: 'agreement', label: 'Угода' }]} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="customer_types" label="Тип контрагента">
+                  <Select mode="multiple" options={Object.entries(customerTypeMap).map(([value, { label }]) => ({ value, label }))} placeholder="Оберіть типи" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="cooperation_forms" label="Форми співпраці">
+                  <Select mode="multiple" options={Object.entries(cooperationFormMap).map(([value, { label }]) => ({ value, label }))} placeholder="Оберіть форми" />
+                </Form.Item>
+              </Col>
+            </Row>
             <Form.Item name="address" label="Адреса"><Input /></Form.Item>
-            <Form.Item name="phone" label="Телефон"><Input /></Form.Item>
-            <Form.Item name="email" label="Email"><Input type="email" /></Form.Item>
+            <Row gutter={16}>
+              <Col span={12}><Form.Item name="phone" label="Телефон"><Input /></Form.Item></Col>
+              <Col span={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
+            </Row>
           </>
         )
       case 'supplier':
         return (
           <>
-            <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="category" label="Категорія" rules={[{ required: true }]}>
-              <Select options={[{ value: 'manufacturer', label: 'Виробник' }, { value: 'retailer', label: 'Рітейлер' }, { value: 'both', label: 'Виробник і рітейлер' }]} />
-            </Form.Item>
-            <Form.Item name="location" label="Локація"><Input /></Form.Item>
-            <Form.Item name="phone" label="Телефон"><Input /></Form.Item>
-            <Form.Item name="email" label="Email"><Input type="email" /></Form.Item>
-            <Form.Item name="contact_person" label="Контактна особа"><Input /></Form.Item>
+            <Row gutter={16}>
+              <Col span={14}>
+                <Form.Item name="company_name" label="Назва підприємства" rules={[{ required: true }]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={10}>
+                <Form.Item name="category" label="Категорія" rules={[{ required: true }]}>
+                  <Select options={[{ value: 'manufacturer', label: 'Виробник' }, { value: 'retailer', label: 'Рітейлер' }, { value: 'both', label: 'Виробник і рітейлер' }]} />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}><Form.Item name="phone" label="Телефон"><Input /></Form.Item></Col>
+              <Col span={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}><Form.Item name="contact_person" label="Контактна особа"><Input /></Form.Item></Col>
+              <Col span={12}><Form.Item name="location" label="Локація"><Input /></Form.Item></Col>
+            </Row>
             <Form.Item name="work_schedule" label="Графік роботи"><Input /></Form.Item>
           </>
         )
       case 'warehouse':
         return (
           <>
-            <Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item>
-            <Form.Item name="warehouse_type" label="Тип складу" rules={[{ required: true }]}>
-              <Select options={[{ value: 'main', label: 'Головний склад' }, { value: 'production_unit', label: 'Склад цеху' }]} />
-            </Form.Item>
-            <Form.Item name="address" label="Адреса"><Input /></Form.Item>
-            <Form.Item name="contact_info" label="Контактна інформація"><Input /></Form.Item>
+            <Row gutter={16}>
+              <Col span={14}><Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item></Col>
+              <Col span={10}>
+                <Form.Item name="warehouse_type" label="Тип складу" rules={[{ required: true }]}>
+                  <Select options={[{ value: 'main', label: 'Головний склад' }, { value: 'production_unit', label: 'Склад цеху' }]} />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}><Form.Item name="address" label="Адреса"><Input /></Form.Item></Col>
+              <Col span={12}><Form.Item name="contact_info" label="Контактна інформація"><Input /></Form.Item></Col>
+            </Row>
           </>
         )
       case 'department':
         return (
           <>
-            <Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item>
-            <Form.Item name="department_type" label="Тип" rules={[{ required: true }]}>
-              <Select options={[{ value: 'production_unit', label: 'Виробничий цех' }, { value: 'office', label: 'Офіс' }, { value: 'main_warehouse', label: 'Головний склад' }]} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={14}><Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item></Col>
+              <Col span={10}>
+                <Form.Item name="department_type" label="Тип" rules={[{ required: true }]}>
+                  <Select options={[{ value: 'production_unit', label: 'Виробничий цех' }, { value: 'office', label: 'Офіс' }, { value: 'main_warehouse', label: 'Головний склад' }]} />
+                </Form.Item>
+              </Col>
+            </Row>
             <Form.Item name="address" label="Адреса"><Input /></Form.Item>
           </>
         )
       case 'size':
         return (
           <>
-            <Form.Item name="name" label="Розмір" rules={[{ required: true }]}><Input /></Form.Item>
-            <Form.Item name="description" label="Опис"><Input /></Form.Item>
-            <Form.Item name="sort_order" label="Порядок сортування"><Input type="number" /></Form.Item>
+            <Row gutter={16}>
+              <Col span={10}><Form.Item name="name" label="Розмір" rules={[{ required: true }]}><Input /></Form.Item></Col>
+              <Col span={10}><Form.Item name="description" label="Опис"><Input /></Form.Item></Col>
+              <Col span={4}><Form.Item name="sort_order" label="Порядок"><Input type="number" /></Form.Item></Col>
+            </Row>
           </>
         )
       case 'fabricType':
         return (
           <>
             <Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item>
-            <Form.Item name="description" label="Опис"><Input.TextArea rows={3} /></Form.Item>
+            <Form.Item name="description" label="Опис"><Input.TextArea rows={2} /></Form.Item>
           </>
         )
       case 'fabricClass':
         return (
           <>
             <Form.Item name="name" label="Назва" rules={[{ required: true }]}><Input /></Form.Item>
-            <Form.Item name="description" label="Опис"><Input.TextArea rows={3} /></Form.Item>
+            <Form.Item name="description" label="Опис"><Input.TextArea rows={2} /></Form.Item>
           </>
         )
       default:
@@ -525,8 +567,10 @@ function DirectoriesPage() {
         cancelText="Скасувати"
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
           {renderModalFields()}
         </Form>
       </Modal>

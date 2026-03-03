@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, DatePicker, Upload, Descriptions, Spin } from 'antd'
+import { Table, Button, Card, Typography, Tag, Input, Modal, Form, Select, Space, message, Popconfirm, DatePicker, Upload, Descriptions, Spin, Row, Col } from 'antd'
 import type { UploadFile } from 'antd'
 import {
   PlusOutlined,
@@ -395,49 +395,64 @@ function TechSpecsPage() {
         confirmLoading={createSpecMutation.isPending || updateSpecMutation.isPending}
         width={640}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
           <Form.Item name="title" label="Назва" rules={[{ required: true, message: 'Введіть назву' }]}>
             <Input placeholder="Назва технічної специфікації" />
           </Form.Item>
-          <Form.Item name="number" label="Номер документа">
-            <Input placeholder="ТС-2025-XXX" />
-          </Form.Item>
-          <Form.Item name="affiliation_id" label="Приналежність">
-            <Select placeholder="Оберіть приналежність" allowClear options={affiliations.map(a => ({ value: a.id, label: a.name }))} />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="number" label="Номер документа">
+                <Input placeholder="ТС-2025-XXX" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="affiliation_id" label="Приналежність">
+                <Select placeholder="Приналежність" allowClear options={affiliations.map(a => ({ value: a.id, label: a.name }))} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="status" label="Статус" initialValue="draft">
+                <Select options={[
+                  { value: 'draft', label: 'Чернетка' },
+                  { value: 'active', label: 'Діючий' },
+                  { value: 'expired', label: 'Недіючий' },
+                  { value: 'cancelled', label: 'Скасований' },
+                ]} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="effective_date" label="Дата введення">
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Дата" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="expiry_date" label="Дата закінчення">
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Дата" />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item name="description" label="Опис">
-            <Input.TextArea rows={3} placeholder="Опис технічної специфікації" />
+            <Input.TextArea rows={2} placeholder="Опис технічної специфікації" />
           </Form.Item>
-          <Space style={{ width: '100%' }} size="large">
-            <Form.Item name="effective_date" label="Дата введення в дію" style={{ flex: 1 }}>
-              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Оберіть дату" />
-            </Form.Item>
-            <Form.Item name="expiry_date" label="Дата закінчення дії" style={{ flex: 1 }}>
-              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Оберіть дату" />
-            </Form.Item>
-          </Space>
-          <Form.Item name="status" label="Статус" initialValue="draft">
-            <Select options={[
-              { value: 'draft', label: 'Чернетка' },
-              { value: 'active', label: 'Діючий' },
-              { value: 'expired', label: 'Недіючий' },
-              { value: 'cancelled', label: 'Скасований' },
-            ]} />
-          </Form.Item>
-          <Form.Item label="Документ">
-            <Upload
-              fileList={fileList}
-              onChange={({ fileList: fl }) => setFileList(fl)}
-              beforeUpload={() => false}
-              maxCount={1}
-            >
-              <Button icon={<UploadOutlined />}>Завантажити файл</Button>
-            </Upload>
-          </Form.Item>
-          <Form.Item name="notes" label="Примітки">
-            <Input.TextArea rows={2} placeholder="Додаткові примітки" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Документ">
+                <Upload fileList={fileList} onChange={({ fileList: fl }) => setFileList(fl)} beforeUpload={() => false} maxCount={1}>
+                  <Button icon={<UploadOutlined />}>Завантажити файл</Button>
+                </Upload>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="notes" label="Примітки" style={{ marginBottom: 0 }}>
+                <Input.TextArea rows={2} placeholder="Додаткові примітки" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
@@ -453,6 +468,8 @@ function TechSpecsPage() {
           </Button>,
         ]}
         width={640}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         {viewingRecord && (
           <Descriptions column={2} bordered size="small" style={{ marginTop: 16 }}>

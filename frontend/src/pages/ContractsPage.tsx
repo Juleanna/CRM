@@ -346,41 +346,35 @@ function ContractsPage() {
         okText={editingContract ? 'Зберегти' : 'Створити'}
         cancelText="Скасувати"
         confirmLoading={createMutation.isPending || updateMutation.isPending}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="contract_number"
-            label="Номер договору"
-            rules={[{ required: true, message: 'Введіть номер договору' }]}
-          >
-            <Input placeholder="ДГ-2024-001" />
-          </Form.Item>
-
-          <Form.Item
-            name="status"
-            label="Статус"
-            rules={[{ required: true, message: 'Оберіть статус' }]}
-          >
-            <Select
-              placeholder="Оберіть статус"
-              options={Object.entries(statusMap).map(([k, v]) => ({
-                value: k,
-                label: v.label,
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item name="total_quantity" label="Загальна кількість">
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
-          </Form.Item>
-
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
           <Row gutter={16}>
             <Col span={12}>
+              <Form.Item name="contract_number" label="Номер договору" rules={[{ required: true, message: 'Введіть номер' }]}>
+                <Input placeholder="ДГ-2024-001" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Оберіть статус' }]}>
+                <Select placeholder="Статус" options={Object.entries(statusMap).map(([k, v]) => ({ value: k, label: v.label }))} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="total_quantity" label="Кількість">
+                <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
               <Form.Item name="start_date" label="Дата початку">
                 <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item name="end_date" label="Кінцевий термін">
                 <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
               </Form.Item>

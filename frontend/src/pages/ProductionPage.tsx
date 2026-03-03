@@ -322,37 +322,56 @@ function ProductionPage() {
         cancelText="Скасувати"
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="name" label="Назва виробу" rules={[{ required: true, message: "Обов'язкове поле" }]}>
-            <Input placeholder="Костюм КЛП Ніка" />
-          </Form.Item>
-          <Form.Item name="contract_number" label="Номер договору">
-            <Input placeholder="ДГ-2024-001" />
-          </Form.Item>
-          <Form.Item name="category" label="Категорія" rules={[{ required: true, message: 'Оберіть категорію' }]}>
-            <Input placeholder="Костюм" />
-          </Form.Item>
-          <Form.Item name="product_type" label="Тип виробу">
-            <Select
-              placeholder="Оберіть тип"
-              options={[
-                { value: 'Чоловіче', label: 'Чоловіче' },
-                { value: 'Жіноче', label: 'Жіноче' },
-                { value: 'Унісекс', label: 'Унісекс' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="quantity" label="Кількість" rules={[{ required: true, message: 'Вкажіть кількість' }]}>
-            <InputNumber style={{ width: '100%' }} min={1} placeholder="0" />
-          </Form.Item>
-          <Form.Item name="department_name" label="Підрозділ">
-            <Input placeholder="Головний цех" />
-          </Form.Item>
-          <Form.Item name="production_date" label="Дата виробництва" rules={[{ required: true, message: 'Оберіть дату' }]}>
-            <DatePicker style={{ width: '100%' }} placeholder="Оберіть дату" />
-          </Form.Item>
-          <Form.Item name="transferred_to_main" valuePropName="checked">
+        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+          <Row gutter={16}>
+            <Col span={14}>
+              <Form.Item name="name" label="Назва виробу" rules={[{ required: true, message: "Обов'язкове поле" }]}>
+                <Input placeholder="Костюм КЛП Ніка" />
+              </Form.Item>
+            </Col>
+            <Col span={10}>
+              <Form.Item name="contract_number" label="Номер договору">
+                <Input placeholder="ДГ-2024-001" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="category" label="Категорія" rules={[{ required: true, message: 'Оберіть категорію' }]}>
+                <Input placeholder="Костюм" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="product_type" label="Тип виробу">
+                <Select placeholder="Тип" options={[
+                  { value: 'Чоловіче', label: 'Чоловіче' },
+                  { value: 'Жіноче', label: 'Жіноче' },
+                  { value: 'Унісекс', label: 'Унісекс' },
+                ]} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="quantity" label="Кількість" rules={[{ required: true, message: 'Вкажіть' }]}>
+                <InputNumber style={{ width: '100%' }} min={1} placeholder="0" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="department_name" label="Підрозділ">
+                <Input placeholder="Головний цех" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="production_date" label="Дата виробництва" rules={[{ required: true, message: 'Оберіть дату' }]}>
+                <DatePicker style={{ width: '100%' }} placeholder="Дата" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="transferred_to_main" valuePropName="checked" style={{ marginBottom: 0 }}>
             <Checkbox>Передано на головний склад</Checkbox>
           </Form.Item>
         </Form>

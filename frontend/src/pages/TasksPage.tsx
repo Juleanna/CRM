@@ -458,6 +458,8 @@ function TasksPage() {
         onCancel={() => setDetailOpen(false)}
         footer={null}
         width={700}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         {selectedTask && (
           <Descriptions bordered column={2}>
@@ -505,75 +507,54 @@ function TasksPage() {
         confirmLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
         width={600}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Spin spinning={createTaskMutation.isPending || updateTaskMutation.isPending}>
-          <Form form={taskForm} layout="vertical">
-            <Form.Item
-              name="title"
-              label="Назва"
-              rules={[{ required: true, message: 'Введіть назву завдання' }]}
-            >
+          <Form form={taskForm} layout="vertical" style={{ marginTop: 8 }}>
+            <Form.Item name="title" label="Назва" rules={[{ required: true, message: 'Введіть назву завдання' }]}>
               <Input placeholder="Назва завдання" />
-            </Form.Item>
-
-            <Form.Item name="description" label="Опис">
-              <Input.TextArea rows={3} placeholder="Опис завдання" />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name="assignee" label="Виконавець">
-                  <Select
-                    placeholder="Оберіть виконавця"
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={users.map(u => ({
-                      value: u.id,
-                      label: `${u.last_name} ${u.first_name}`.trim() || u.username,
-                    }))}
-                  />
+                  <Select placeholder="Виконавець" allowClear showSearch optionFilterProp="label"
+                    options={users.map(u => ({ value: u.id, label: `${u.last_name} ${u.first_name}`.trim() || u.username }))} />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={6}>
                 <Form.Item name="status" label="Статус" initialValue="new">
-                  <Select
-                    options={Object.entries(taskStatus).map(([k, v]) => ({ value: k, label: v.label }))}
-                  />
+                  <Select options={Object.entries(taskStatus).map(([k, v]) => ({ value: k, label: v.label }))} />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item name="due_date" label="Дедлайн">
+                  <DatePicker style={{ width: '100%' }} placeholder="Дата" format="DD.MM.YYYY" />
                 </Form.Item>
               </Col>
             </Row>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="due_date" label="Дедлайн">
-                  <DatePicker style={{ width: '100%' }} placeholder="Оберіть дату" format="DD.MM.YYYY" />
+                <Form.Item name="order" label="Замовлення">
+                  <Select placeholder="Замовлення" allowClear showSearch optionFilterProp="label"
+                    options={orders.map(o => ({ value: o.id, label: o.title }))} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="order" label="Замовлення">
-                  <Select
-                    placeholder="Оберіть замовлення"
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={orders.map(o => ({ value: o.id, label: o.title }))}
-                  />
+                <Form.Item name="contract" label="Контракт">
+                  <Select placeholder="Контракт" allowClear showSearch optionFilterProp="label"
+                    options={contracts.map(c => ({ value: c.id, label: c.contract_number }))} />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item name="contract" label="Контракт">
-              <Select
-                placeholder="Оберіть контракт"
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                options={contracts.map(c => ({ value: c.id, label: c.contract_number }))}
-              />
+            <Form.Item name="description" label="Опис">
+              <Input.TextArea rows={2} placeholder="Опис завдання" />
             </Form.Item>
 
-            <Form.Item name="comments" label="Коментарі">
+            <Form.Item name="comments" label="Коментарі" style={{ marginBottom: 0 }}>
               <Input.TextArea rows={2} placeholder="Коментарі" />
             </Form.Item>
           </Form>
@@ -591,6 +572,8 @@ function TasksPage() {
         confirmLoading={createChecklistMutation.isPending}
         width={650}
         destroyOnHidden
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Spin spinning={createChecklistMutation.isPending}>
           <Form form={checklistForm} layout="vertical">
